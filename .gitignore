@@ -1,0 +1,10 @@
+# Variáveis de ambiente (credenciais)
+.env
+config.php
+
+# Ignorar pastas de uploads (Fotos e Docs pesados)
+publico/uploads/
+
+# Arquivos de sistema
+Thumbs.db
+.DS_Store

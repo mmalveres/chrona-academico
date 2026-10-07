@@ -1,0 +1,22 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # --- CORREÇÃO DAS IMAGENS ---
+    # Se o navegador pedir algo na pasta 'assets' ou 'uploads', 
+    # o servidor busca automaticamente dentro da pasta 'publico'
+    RewriteRule ^(assets|uploads)/(.*)$ publico/$1/$2 [L,QSA]
+
+    # --- REGRA DO SISTEMA ---
+    # Todo o resto vai para o index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php?acao=$1 [QSA,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+    # Permite que o App carregue fontes e scripts
+    Header set Access-Control-Allow-Origin "*"
+</IfModule>
+
+# Evita listagem de pastas (Segurança)
+Options -Indexes

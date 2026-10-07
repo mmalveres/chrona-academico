@@ -1,0 +1,216 @@
+/* ARQUIVO: publico/assets/css/style.css */
+
+/* --- 1. VARIÁVEIS DE CORES & SISTEMA --- */
+:root {
+    --primary: #003366;       /* Azul Navy (Sidebar) */
+    --accent: #FFB300;        /* Amarelo Ouro (Destaques) */
+    --bg-body: #F4F7FE;       /* Fundo Cinza Moderno */
+    --text-dark: #2B3674;     /* Texto Principal */
+    --text-grey: #A3AED0;     /* Texto Secundário */
+    
+    /* Cores de Status/Botões */
+    --btn-green: #05CD99;
+    --btn-red: #EE5D50;
+    --btn-purple: #4318FF;
+    
+    /* Variáveis de Espaçamento Seguro (Mobile) */
+    --safe-top: env(safe-area-inset-top);
+    --safe-bottom: env(safe-area-inset-bottom);
+}
+
+body {
+    background-color: var(--bg-body);
+    font-family: 'Nunito Sans', sans-serif;
+    color: var(--text-dark);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden; /* Evita rolagem lateral indesejada */
+}
+
+a { text-decoration: none; }
+
+/* --- 2. LAYOUT DESKTOP (PADRÃO) --- */
+#wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Sidebar (Menu Lateral Esquerdo) */
+#sidebar-wrapper {
+    min-width: 260px;
+    max-width: 260px;
+    background-color: var(--primary);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed; /* Fixo na tela */
+    height: 100vh;
+    z-index: 1000;
+    transition: all 0.3s;
+}
+
+/* Área de Conteúdo (Direita) */
+#page-content-wrapper {
+    width: 100%;
+    margin-left: 260px; /* Empurra o conteúdo para não ficar baixo da sidebar */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: all 0.3s;
+}
+
+/* --- 3. COMPONENTES DA SIDEBAR --- */
+.sidebar-brand {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    padding-left: 30px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.list-group-item {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    padding: 16px 30px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    transition: 0.2s;
+}
+
+.list-group-item i {
+    margin-right: 15px;
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+.list-group-item:hover, .list-group-item.active {
+    color: #fff;
+    background-color: rgba(255,255,255,0.1);
+    border-right: 4px solid var(--accent); /* Detalhe moderno na direita */
+}
+
+/* --- 4. TOPBAR (CABEÇALHO SUPERIOR) --- */
+.topbar {
+    height: 80px;
+    background: #fff; /* Fundo branco no topo do conteúdo */
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    margin-bottom: 20px;
+    /* Efeito de "Glass" sutil ou sombra */
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02); 
+}
+
+/* --- 5. CARDS E WIDGETS (INTERFACE NOVA) --- */
+.card-custom {
+    background: #fff;
+    border-radius: 20px;
+    border: none;
+    padding: 25px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03); /* Sombra suave moderna */
+    margin-bottom: 24px;
+    position: relative;
+    height: 100%;
+}
+
+.icon-box {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.6rem; color: #fff; margin-right: 15px;
+}
+.bg-blue { background: #3B82F6; }
+.bg-green { background: #05CD99; }
+.bg-yellow { background: #FFB300; }
+.bg-cloud { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+
+.stat-value { font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 700; color: var(--text-dark); line-height: 1.1; }
+.stat-label { color: var(--text-grey); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+/* Botões de Ação (Grandes) */
+.btn-action-lg {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 18px; border-radius: 16px;
+    color: #fff; font-weight: 700; text-align: center;
+    margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: transform 0.2s; border: none;
+}
+.btn-action-lg:hover { transform: translateY(-3px); color: white; opacity: 0.95; }
+.btn-action-lg i { font-size: 1.2rem; margin-right: 10px; }
+
+.btn-yellow { background: var(--accent); color: #003366; }
+.btn-green { background: var(--btn-green); }
+.btn-purple { background: var(--btn-purple); }
+
+/* Tabelas */
+.table-custom th { color: var(--text-grey); font-size: 0.75rem; text-transform: uppercase; border-bottom: 1px solid #E9EDF7; padding-bottom: 15px; }
+.table-custom td { padding: 15px 5px; vertical-align: middle; font-weight: 600; color: var(--text-dark); border-bottom: 1px solid #F4F7FE; }
+.badge-status { padding: 6px 14px; border-radius: 30px; font-size: 0.7rem; font-weight: 800; }
+.badge-active { background: rgba(5, 205, 153, 0.1); color: #05CD99; }
+.badge-done { background: #EFF4FB; color: var(--text-grey); }
+
+/* --- 6. MOBILE (AJUSTES CRÍTICOS) --- */
+@media (max-width: 991px) {
+    /* Esconde Sidebar e Reseta Margem */
+    #sidebar-wrapper { display: none !important; }
+    #page-content-wrapper { margin-left: 0 !important; width: 100%; }
+    
+    /* Ajuste do Corpo para não cobrir o rodapé */
+    body { padding-bottom: calc(70px + var(--safe-bottom)); }
+    
+    /* Ajuste da Topbar Mobile */
+    .topbar { 
+        padding: 0 20px; 
+        position: sticky; top: 0; z-index: 990; /* Fixa no topo */
+        height: 70px;
+    }
+
+    /* BARRA INFERIOR (App Navigation) */
+    .mobile-bottom-nav {
+        display: flex !important; /* Força aparecer */
+        position: fixed;
+        bottom: 0; left: 0; width: 100%;
+        height: calc(65px + var(--safe-bottom));
+        background: #fff;
+        border-top: 1px solid #E9EDF7;
+        box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
+        z-index: 1050;
+        justify-content: space-around;
+        align-items: flex-start;
+        padding-top: 10px;
+        padding-bottom: var(--safe-bottom);
+    }
+
+    .mobile-nav-item {
+        display: flex; flex-direction: column; align-items: center;
+        text-decoration: none; color: var(--text-grey);
+        font-size: 0.65rem; font-weight: 700; width: 60px;
+    }
+    .mobile-nav-item i { font-size: 1.4rem; margin-bottom: 2px; }
+    .mobile-nav-item.active { color: var(--primary); }
+
+    /* Botão Flutuante (FAB) */
+    .mobile-fab {
+        width: 54px; height: 54px;
+        background: var(--accent); color: var(--primary);
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 1.6rem;
+        box-shadow: 0 4px 15px rgba(255, 179, 0, 0.4);
+        margin-top: -30px; /* Faz o botão "saltar" pra fora */
+        border: 5px solid var(--bg-body); /* Borda "invisível" para recorte */
+    }
+}
+
+/* Esconde Mobile Nav no Desktop */
+@media (min-width: 992px) {
+    .mobile-bottom-nav { display: none !important; }
+}
