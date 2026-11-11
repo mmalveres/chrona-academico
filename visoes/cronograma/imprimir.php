@@ -49,44 +49,87 @@ else                      { $colW = '35px'; $fs = '7px';   $fsH = '6px';   $fsVa
 $rotacionarHeader = $numMeses > 10;
 
 // ── 4. HELPERS ────────────────────────────────────────────────────
-function ehEtapaRaiz(string $codigo, string $item_cod): bool {
-    $ref = !empty($item_cod) ? $item_cod : $codigo;
-    return substr_count(rtrim(trim($ref), '.'), '.') === 0;
-}
-
 function fmtR(float $v): string {
     return number_format($v, 2, ',', '.');
 }
 
 // ── 5. AGRUPAMENTO ────────────────────────────────────────────────
-$relatorio      = [];
-$indexEtapa     = -1;
-$totalGeralObra = 0;
-$totaisPorMes   = array_fill(0, $numMeses, 0);
-
+// As datas só existem nas linhas de etapa/sub-etapa (é lá que a tela de
+// cadastro do cronograma oferece os campos de data); os itens de
+// composição apenas somam valor ao grupo. Por isso o agrupamento aqui
+// precisa ser o mesmo da tela de edição (visoes/cronograma/ver.php).
+$grupos  = [];
+$idxRaiz = -1;
 foreach ($itensCronograma as $item) {
     if ($item['tipo'] === 'etapa') {
-        if (ehEtapaRaiz($item['codigo_referencia'] ?? '', $item['itemizacao'] ?? '')) {
-            $indexEtapa++;
-            $label = trim(($item['itemizacao'] ?? '') ?: ($item['codigo_referencia'] ?? ''));
-            $relatorio[$indexEtapa] = [
-                'codigo'          => rtrim($label, '.'),
-                'descricao'       => $item['descricao'],
-                'total_etapa'     => 0,
-                'valores_mensais' => array_fill(0, $numMeses, 0),
+        $cod      = trim($item['itemizacao'] ?? '');
+        $codLimpo = rtrim($cod, '.');
+        $pontos   = $codLimpo !== '' ? substr_count($codLimpo, '.') : 0;
+
+        if ($pontos === 0) {
+            $idxRaiz++;
+            $grupos[$idxRaiz] = [
+                'codigo'      => $codLimpo ?: rtrim(trim($item['codigo_referencia'] ?? ''), '.'),
+                'descricao'   => $item['descricao'],
+                'total'       => 0.0,
+                'data_inicio' => $item['data_inicio'] ?? '',
+                'data_fim'    => $item['data_fim'] ?? '',
+                'subitens'    => [],
+            ];
+        } elseif ($pontos === 1 && $idxRaiz >= 0) {
+            $grupos[$idxRaiz]['subitens'][] = [
+                'codigo'      => $codLimpo,
+                'descricao'   => $item['descricao'],
+                'total'       => 0.0,
+                'data_inicio' => $item['data_inicio'] ?? '',
+                'data_fim'    => $item['data_fim'] ?? '',
             ];
         }
         continue;
     }
 
-    if ($indexEtapa < 0 || empty($item['data_inicio']) || empty($item['data_fim'])) continue;
+    if ($idxRaiz >= 0) {
+        $valor  = (float)($item['preco_total'] ?? 0);
+        $grupos[$idxRaiz]['total'] += $valor;
+        $idxSub = count($grupos[$idxRaiz]['subitens']) - 1;
+        if ($idxSub >= 0) {
+            $grupos[$idxRaiz]['subitens'][$idxSub]['total'] += $valor;
+        }
+    }
+}
 
-    $valorItem  = (float)$item['preco_total'];
-    $relatorio[$indexEtapa]['total_etapa'] += $valorItem;
+// Linha efetiva do relatório: a etapa raiz (se não tiver sub-etapas)
+// ou cada sub-etapa — é aí que moram as datas de fato preenchidas.
+$linhasEfetivas = [];
+foreach ($grupos as $g) {
+    if (empty($g['subitens'])) {
+        $linhasEfetivas[] = $g;
+    } else {
+        foreach ($g['subitens'] as $sub) {
+            $linhasEfetivas[] = $sub;
+        }
+    }
+}
+
+$relatorio      = [];
+$totalGeralObra = 0;
+$totaisPorMes   = array_fill(0, $numMeses, 0);
+
+foreach ($linhasEfetivas as $linha) {
+    if (empty($linha['data_inicio']) || empty($linha['data_fim']) || $linha['total'] <= 0) continue;
+
+    $valorItem = (float)$linha['total'];
+    $idxLinha  = count($relatorio);
+    $relatorio[$idxLinha] = [
+        'codigo'          => $linha['codigo'],
+        'descricao'       => $linha['descricao'],
+        'total_etapa'     => $valorItem,
+        'valores_mensais' => array_fill(0, $numMeses, 0),
+    ];
     $totalGeralObra += $valorItem;
 
-    $dtIni      = strtotime($item['data_inicio']);
-    $dtFim      = strtotime($item['data_fim']);
+    $dtIni      = strtotime($linha['data_inicio']);
+    $dtFim      = strtotime($linha['data_fim']);
     $diasTotais = max(1, ($dtFim - $dtIni) / 86400 + 1);
     $valPorDia  = $valorItem / $diasTotais;
 
@@ -96,7 +139,7 @@ foreach ($itensCronograma as $item) {
         if ($iniInt > $fimInt) continue;
         $diasNoMes = ($fimInt - $iniInt) / 86400 + 1;
         $valNoMes  = $diasNoMes * $valPorDia;
-        $relatorio[$indexEtapa]['valores_mensais'][$idx] += $valNoMes;
+        $relatorio[$idxLinha]['valores_mensais'][$idx] += $valNoMes;
         $totaisPorMes[$idx] += $valNoMes;
     }
 }

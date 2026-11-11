@@ -246,19 +246,60 @@ public function buscarPorId($id) {
         if ($totalContrato <= 0) return null;
 
         // Itens com datas do cronograma (planejado)
-        $stmtPlan = $this->conn->prepare(
-            "SELECT cp.data_inicio, cp.data_fim,
-                    (oi.quantidade_total * oi.preco_unitario) as valor_item
-             FROM cronograma_planejamento cp
-             JOIN orcamento_itens oi ON cp.id_item_orcamento = oi.id
-             JOIN orcamentos o ON oi.id_orcamento = o.id
-             WHERE o.id_obra = :id_obra
-               AND oi.tipo = 'composicao'
-               AND cp.data_inicio IS NOT NULL
-               AND cp.data_fim    IS NOT NULL"
-        );
-        $stmtPlan->execute([':id_obra' => $id_obra]);
-        $itensPlan = $stmtPlan->fetchAll(PDO::FETCH_ASSOC);
+        // As datas só existem nas linhas de etapa/sub-etapa (é lá que a tela
+        // de cadastro do cronograma oferece os campos de data); os itens de
+        // composição apenas somam valor ao grupo. Por isso o agrupamento
+        // precisa ser o mesmo da tela de edição (visoes/cronograma/ver.php).
+        $itensCronograma = (new Cronograma())->listarCronogramaDaObra($id_obra);
+
+        $grupos  = [];
+        $idxRaiz = -1;
+        foreach ($itensCronograma as $item) {
+            if ($item['tipo'] === 'etapa') {
+                $cod      = trim($item['itemizacao'] ?? '');
+                $codLimpo = rtrim($cod, '.');
+                $pontos   = $codLimpo !== '' ? substr_count($codLimpo, '.') : 0;
+
+                if ($pontos === 0) {
+                    $idxRaiz++;
+                    $grupos[$idxRaiz] = [
+                        'total'       => 0.0,
+                        'data_inicio' => $item['data_inicio'] ?? '',
+                        'data_fim'    => $item['data_fim']    ?? '',
+                        'subitens'    => [],
+                    ];
+                } elseif ($pontos === 1 && $idxRaiz >= 0) {
+                    $grupos[$idxRaiz]['subitens'][] = [
+                        'total'       => 0.0,
+                        'data_inicio' => $item['data_inicio'] ?? '',
+                        'data_fim'    => $item['data_fim']    ?? '',
+                    ];
+                }
+                continue;
+            }
+
+            if ($idxRaiz >= 0) {
+                $valor  = (float)($item['preco_total'] ?? 0);
+                $grupos[$idxRaiz]['total'] += $valor;
+                $idxSub = count($grupos[$idxRaiz]['subitens']) - 1;
+                if ($idxSub >= 0) {
+                    $grupos[$idxRaiz]['subitens'][$idxSub]['total'] += $valor;
+                }
+            }
+        }
+
+        $itensPlan = [];
+        foreach ($grupos as $g) {
+            $linhas = empty($g['subitens']) ? [$g] : $g['subitens'];
+            foreach ($linhas as $linha) {
+                if (empty($linha['data_inicio']) || empty($linha['data_fim']) || $linha['total'] <= 0) continue;
+                $itensPlan[] = [
+                    'data_inicio' => $linha['data_inicio'],
+                    'data_fim'    => $linha['data_fim'],
+                    'valor_item'  => $linha['total'],
+                ];
+            }
+        }
 
         // Realizado por mês (diário de atividades)
         $stmtReal = $this->conn->prepare(
